@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Moving Squares</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas></canvas>
+  <script>
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas to full screen
+    const width = canvas.width = window.innerWidth;
+    const height = canvas.height = window.innerHeight;
+
+    // Function to generate random numbers within a range
+    function random(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    // Function to generate random colors
+    function randomColor() {
+      return `rgb(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)})`;
+    }
+
+    // Square constructor function
+    function Square(x, y, velX, velY, color, size) {
+      this.x = x;
+      this.y = y;
+      this.velX = velX;
+      this.velY = velY;
+      this.color = color;
+      this.size = size;
+    }
+
+    // Draw square
+    Square.prototype.draw = function () {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+    };
+
+    // Update square position and handle bouncing off edges
+    Square.prototype.update = function () {
+      if (this.x + this.size >= width || this.x <= 0) {
+        this.velX = -this.velX;
+      }
+      if (this.y + this.size >= height || this.y <= 0) {
+        this.velY = -this.velY;
+      }
+      this.x += this.velX;
+      this.y += this.velY;
+      this.velX *= 0.99;  // Slow down over time (simulating friction)
+      this.velY *= 0.99;
+    };
+
+    // Change square properties when clicked
+    Square.prototype.clicked = function () {
+      this.color = randomColor();
+      this.velX = random(-10, 10);
+      this.velY = random(-10, 10);
+    };
+
+    // Create multiple squares with random attributes
+    let squares = [];
+    while (squares.length < 15) {
+      let size = random(20, 50);
+      let square = new Square(
+        random(size, width - size),
+        random(size, height - size),
+        random(-5, 5),
+        random(-5, 5),
+        randomColor(),
+        size
+      );
+      squares.push(square);
+    }
+
+    // Main animation loop
+    function loop() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i < squares.length; i++) {
+        squares[i].draw();
+        squares[i].update();
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    // Detect mouse click to change square behavior
+    canvas.addEventListener('click', function (event) {
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      for (let i = 0; i < squares.length; i++) {
+        if (
+          mouseX > squares[i].x &&
+          mouseX < squares[i].x + squares[i].size &&
+          mouseY > squares[i].y &&
+          mouseY < squares[i].y + squares[i].size
+        ) {
+          squares[i].clicked();  // Change direction and color when clicked
+        }
+      }
+    });
+  </script>
+</body>
+</html>
